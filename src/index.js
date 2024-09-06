@@ -9,12 +9,23 @@ const thresholdSlider = document.getElementById("threshold-slider");
 const thresholdValue = document.getElementById("threshold-value");
 const detectObjectsButton = document.getElementById("detect-objects");
 const status = document.getElementById("status");
-var image = '';
+let detector = null;
+let image = '';
 
 // Create a new object detection pipeline
 status.textContent = "Loading model...";
-const detector = await pipeline("object-detection", "Xenova/detr-resnet-50");
-status.textContent = "Ready";
+async function initialize() {
+    try {
+        detector = await pipeline("object-detection", "Xenova/detr-resnet-50");
+        status.textContent = "Ready";
+        detectObjectsButton.disabled = false; // Enable button once the detector is ready
+    } catch (error) {
+        status.textContent = "Error loading model.";
+        console.error("Error initializing detector:", error);
+    }
+}
+
+initialize();
 
 fileUpload.addEventListener("change", function (e) {
     const file = e.target.files[0];
@@ -45,25 +56,34 @@ thresholdSlider.addEventListener('input', function () {
 detectObjectsButton.addEventListener('click', detectAndDrawObjects);
 
 async function detectAndDrawObjects() {
+    if (!detector) {
+        status.textContent = "Model is not ready yet.";
+        return;
+    }
+
     // Get threshold value from slider
     const threshold = parseFloat(thresholdSlider.value);
 
     clearPreviousAnnotations();
     status.textContent = "Detecting...";
 
-    const detectedObjects = await detector(image.src, {
-        threshold: threshold,
-        percentage: true,
-    });
-    // console.log("Detected Objects:", detectedObjects);
+    try {
+        const detectedObjects = await detector(image.src, {
+            threshold: threshold,
+            percentage: true,
+        });
 
-    // Draw Detected Objects
-    status.textContent = "Drawing...";
-    detectedObjects.forEach(obj => {
-        drawObjectBox(obj);
-    });
+        // Draw Detected Objects
+        status.textContent = "Drawing...";
+        detectedObjects.forEach(obj => {
+            drawObjectBox(obj);
+        });
 
-    status.textContent = "Done!";
+        status.textContent = "Done!";
+    } catch (error) {
+        status.textContent = "Error during detection.";
+        console.error("Error detecting objects:", error);
+    }
 }
 
 function clearPreviousAnnotations() {
@@ -92,7 +112,6 @@ function drawObjectBox(detectedObject) {
 
     // Draw label
     const labelElement = document.createElement('span');
-    // labelElement.textContent = `${label}: ${Math.floor(score * 100)}%`;
     labelElement.textContent = `${label}`;
     labelElement.className = 'bounding-box-label';
     labelElement.style.backgroundColor = color;

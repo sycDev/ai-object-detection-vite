@@ -38,6 +38,8 @@ This project demonstrates how to perform object detection using `transformers.js
 
 ## Usage
 
+![screenshot](https://github.com/user-attachments/assets/d45a6672-3740-47c8-951e-17c9bbf7deb1)
+
 1. **Upload an Image:** Click the "Upload Image" button to select and upload an image from your device.
 
 2. **Set Detection Threshold:** Use the slider to adjust the detection threshold. The threshold value determines the confidence level required for an object to be detected.
